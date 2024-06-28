@@ -16,7 +16,7 @@ Uses Socket.io for real time communication and stores user details in encrypted 
 Clone the project
 
 ```bash
-  git clone [https://github.com/Vamshi-Birru/Group_chat-app]
+  git clone [https://github.com/Vamshi-Birru/Group_chat-API]
 ```
 
 
