@@ -1,4 +1,6 @@
 const express = require("express");
+const http = require("HTTP");
+const socketIo = require("socket.io");
 const connectDB = require("./config/db");
 const dotenv = require("dotenv");
 const userRoutes = require("./routes/userRoutes");
@@ -11,7 +13,13 @@ const cors= require("cors");
 dotenv.config();
 connectDB();
 const app = express();
-
+const server = http.createServer(app);
+const io = socketIo(server, {
+  pingTimeout: 60000,
+  cors: {
+    origin: "*",
+  },
+});
 app.use(express.json()); // to accept json data
 
 app.use(cors());
@@ -31,12 +39,12 @@ app.use("/api/message", messageRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT||9000;
 
-const server = app.listen(
-  PORT,
-  console.log(`Server running on PORT ${PORT}...`.yellow.bold)
-);
+server.listen(PORT, () => {
+  console.log(`Server running on PORT ${PORT}...`);
+});
+
 
 const io = require("socket.io")(server, {
   pingTimeout: 60000,
@@ -57,6 +65,7 @@ io.on("connection", (socket) => {
     socket.join(room);
     console.log("User Joined Room: " + room);
   });
+
   socket.on("typing", (room) => socket.in(room).emit("typing"));
   socket.on("stop typing", (room) => socket.in(room).emit("stop typing"));
 
@@ -71,6 +80,12 @@ io.on("connection", (socket) => {
       socket.in(user._id).emit("message recieved", newMessageRecieved);
     });
   });
+
+  socket.off("setup", () => {
+    console.log("USER DISCONNECTED");
+    socket.leave(userData._id);
+  });
+});
 
   socket.off("setup", () => {
     console.log("USER DISCONNECTED");
